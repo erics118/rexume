@@ -50,7 +50,9 @@ fn occupant(conn: &Connection, state_dir: &Path, block: &str) -> Result<Option<O
                 let runtime: Runtime = row.get(0)?;
                 let conversation = Conversation {
                     native_id: row.get(1)?,
-                    transcript: row.get(2)?,
+                    transcript: row
+                        .get::<_, Option<String>>(2)?
+                        .map(|transcript| runtime.locate(transcript)),
                     settings: row
                         .get::<_, Value>(3)?
                         .as_object()

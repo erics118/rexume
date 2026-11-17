@@ -118,6 +118,30 @@ pub fn records(state_dir: &Path) -> PathBuf {
     state_dir.join("claude")
 }
 
+/// Claude Code keeps a transcript in the project folder its session started in, but after `/cd`
+/// the reported path can name the new directory's folder, where no file exists. A missing path
+/// is found by its file name in the other project folders.
+pub fn locate(transcript: &str) -> String {
+    let path = Path::new(transcript);
+    if path.exists() {
+        return transcript.to_owned();
+    }
+    let (Some(name), Some(projects)) = (path.file_name(), path.parent().and_then(Path::parent))
+    else {
+        return transcript.to_owned();
+    };
+    std::fs::read_dir(projects)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|folder| folder.path().join(name))
+        .find(|candidate| candidate.is_file())
+        .map_or_else(
+            || transcript.to_owned(),
+            |found| found.to_string_lossy().into_owned(),
+        )
+}
+
 pub fn turn_event(input: &Value) -> Option<Value> {
     if input.get("agent_id").is_some_and(|v| !v.is_null()) {
         return None;

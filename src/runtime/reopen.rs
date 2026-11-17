@@ -61,6 +61,15 @@ impl Runtime {
         }
     }
 
+    /// The transcript where it is on disk now, which for Claude Code may differ from the reported
+    /// path (`claude::locate`).
+    pub fn locate(self, transcript: String) -> String {
+        match self {
+            Self::Claude => claude::locate(&transcript),
+            Self::Codex | Self::Pi | Self::Omp => transcript,
+        }
+    }
+
     /// Claude Code, Codex, and omp refuse to resume a conversation whose file does not exist yet,
     /// which Claude Code and Codex write only with its first prompt; Pi opens a missing session
     /// file as a new session.

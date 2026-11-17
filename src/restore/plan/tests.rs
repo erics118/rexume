@@ -285,4 +285,5 @@ fn a_conversation_with_an_unusable_launch_declaration_keeps_the_shell() -> Resul
 
 mod mode;
 mod model;
+mod moved;
 mod two_panes;
