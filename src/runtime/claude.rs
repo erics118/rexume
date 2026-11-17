@@ -120,14 +120,18 @@ pub fn records(state_dir: &Path) -> PathBuf {
 
 /// Claude Code keeps a transcript in the project folder its session started in, but after `/cd`
 /// the reported path can name the new directory's folder, where no file exists. A missing path
-/// is found by its file name in the other project folders.
+/// is found by its file name in the other project folders. Only a path inside Claude Code's
+/// `projects` folder is looked up, so a file of the same name elsewhere never stands in for it.
 pub fn locate(transcript: &str) -> String {
     let path = Path::new(transcript);
     if path.exists() {
         return transcript.to_owned();
     }
-    let (Some(name), Some(projects)) = (path.file_name(), path.parent().and_then(Path::parent))
-    else {
+    let projects = path
+        .parent()
+        .and_then(Path::parent)
+        .filter(|projects| projects.file_name().is_some_and(|name| name == "projects"));
+    let (Some(name), Some(projects)) = (path.file_name(), projects) else {
         return transcript.to_owned();
     };
     std::fs::read_dir(projects)
